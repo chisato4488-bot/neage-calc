@@ -2,123 +2,110 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#006b55">
-<meta name="description" content="元の数値とアップ率から値上げ後の金額を計算するアプリ">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f7fb">
 <link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>値上げ計算</title>
 <style>
-:root{color-scheme:light;--green:#006b55;--border:#dedede;--muted:#777;--bg:#fff;--soft:#f7f8f7}
+:root{color-scheme:light;--ink:#202938;--muted:#64748b;--line:#dbe2ea;--accent:#2563eb;--panel:#fff;--bg:#f5f7fb}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#111;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
-main{max-width:980px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;min-height:100dvh;align-content:start}
-.panel{border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 2px 5px #00000012}
-.field{margin-bottom:22px}
-label,.section-title{display:block;font-weight:700;margin-bottom:10px;font-size:17px}
-input,select{width:100%;border:1px solid var(--border);border-radius:18px;padding:18px 16px;font:inherit;font-size:22px;background:#fff;color:#111}
-input{text-align:right}
-.suffix{position:relative}.suffix input{padding-right:52px}.suffix span{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--muted);pointer-events:none}
-.options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-button{font:inherit;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:18px;padding:15px 8px;font-weight:650;color:#111}
-button.active,button.primary{background:var(--green);border-color:var(--green);color:white}
-.reset{width:100%;margin-top:10px;color:#666}
-.resultbox{border:1px solid var(--border);border-radius:24px;padding:24px;background:#fafafa;margin-bottom:16px}
-.resultbox h2{font-size:18px;margin:0 0 22px}.result{font-size:42px;font-weight:800;text-align:right;overflow-wrap:anywhere}.formula{text-align:right;color:var(--muted);margin-top:10px}
-.final{background:var(--green);color:white;border-radius:24px;padding:24px;margin-bottom:16px}.final h2{font-size:18px;margin:0 0 22px}.final .result{font-size:56px}.final .formula{color:#d6f3e9}
-.note{border:1px dashed var(--border);border-radius:24px;padding:20px;color:var(--muted);line-height:1.8}
-footer{grid-column:1/-1;color:var(--muted);font-size:13px;text-align:center;padding:4px}
-@media(max-width:700px){main{grid-template-columns:1fr;padding:14px;gap:14px}.panel{padding:18px}.result{font-size:36px}.final .result{font-size:48px}.resultbox,.final{padding:20px}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.35}
+main{width:min(100% - 20px,520px);margin:10px auto;padding:0}
+header{text-align:center;margin:0 0 10px}
+h1{font-size:1.35rem;line-height:1.2;margin:0 0 3px}
+header p{margin:0;color:var(--muted);font-size:.8rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px;box-shadow:0 2px 7px #0f172a08}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field{min-width:0}
+label{display:block;font-size:.82rem;font-weight:650;margin-bottom:4px}
+input,select{display:block;width:100%;min-width:0;height:40px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:var(--ink);padding:7px 9px;font:inherit;font-size:1rem}
+input:focus,select:focus{outline:2px solid #93c5fd;border-color:var(--accent)}
+.full{grid-column:1/-1}
+.result{background:#eff6ff;border-color:#bfdbfe}
+.result-label{font-size:.82rem;color:#1e40af;font-weight:700;margin:0 0 2px}
+.amount{font-size:clamp(1.65rem,7vw,2.2rem);line-height:1.15;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere;margin:0 0 7px}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.result-item{background:#fff;border:1px solid #dbeafe;border-radius:8px;padding:8px}
+.small-label{font-size:.75rem;color:var(--muted);margin-bottom:2px}
+.small-value{font-size:1rem;font-weight:700;overflow-wrap:anywhere}
+.formula{font-size:.78rem;color:#475569;margin:8px 0 0;overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;margin-top:10px}
+button{flex:1;min-height:39px;border:0;border-radius:8px;padding:8px 10px;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:white}
+.secondary{background:#e8edf4;color:#243247}
+.note{font-size:.75rem;color:var(--muted);text-align:center;margin:6px 0 0}
+@media(max-width:360px){body{font-size:14px}main{width:calc(100% - 14px);margin:7px auto}.panel{padding:9px;border-radius:10px;margin-bottom:7px}.fields{gap:7px}input,select{height:38px;padding:6px 7px}h1{font-size:1.2rem}.amount{font-size:1.65rem}}
+@media(min-height:760px){main{margin-top:16px}.panel{padding:14px;margin-bottom:10px}}
 </style>
 </head>
 <body>
 <main>
-<section class="panel" aria-label="入力">
-  <div class="field">
-    <label for="base">① 元の数値</label>
-    <input id="base" type="number" inputmode="decimal" value="100" step="any">
-  </div>
-  <div class="field">
-    <label for="rate">② アップ率</label>
-    <div class="suffix"><input id="rate" type="number" inputmode="decimal" value="10" step="any"><span>%</span></div>
-  </div>
-  <div class="field">
-    <span class="section-title">③ 端数処理</span>
-    <div class="options" id="rounding">
-      <button type="button" data-mode="round" class="active">四捨五入</button>
-      <button type="button" data-mode="ceil">切り上げ</button>
-      <button type="button" data-mode="floor">切り捨て</button>
-    </div>
-  </div>
-  <div class="field">
-    <label for="digits">④ 小数点以下の表示桁数</label>
-    <select id="digits">
-      <option value="0">0位（整数）</option>
-      <option value="1">1位（小数第1位まで）</option>
-      <option value="2">2位（小数第2位まで）</option>
-      <option value="3">3位（小数第3位まで）</option>
-      <option value="4">4位（小数第4位まで）</option>
-    </select>
-  </div>
-  <button type="button" id="reset" class="reset">↶　リセット</button>
+<header>
+<h1>値上げ計算</h1>
+<p>値上げ後の価格をかんたん計算</p>
+</header>
+<section class="panel">
+<div class="fields">
+<div class="field full">
+<label for="base">値上げ前の価格・金額</label>
+<input id="base" type="number" inputmode="decimal" min="0" step="any" placeholder="例：1000" value="1000">
+</div>
+<div class="field">
+<label for="rate">値上げ率（％）</label>
+<input id="rate" type="number" inputmode="decimal" step="any" value="10">
+</div>
+<div class="field">
+<label for="digits">小数点以下の桁数</label>
+<select id="digits"><option value="0">0桁（整数）</option><option value="1">1桁</option><option value="2">2桁</option><option value="3">3桁</option><option value="4">4桁</option></select>
+</div>
+<div class="field full">
+<label for="rounding">端数処理</label>
+<select id="rounding"><option value="round">四捨五入</option><option value="ceil">切り上げ</option><option value="floor">切り捨て</option></select>
+</div>
+</div>
+<div class="actions">
+<button class="primary" id="calculate" type="button">計算する</button>
+<button class="secondary" id="reset" type="button">リセット</button>
+</div>
 </section>
-<section aria-label="計算結果">
-  <div class="resultbox">
-    <h2>⑤ 結果（端数処理前）</h2>
-    <div class="result" id="raw">110</div>
-    <div class="formula" id="rawFormula">100 × (1 + 10 ÷ 100)</div>
-  </div>
-  <div class="final">
-    <h2>⑥ 最終結果</h2>
-    <div class="result" id="final">110</div>
-    <div class="formula" id="roundLabel">四捨五入・整数で表示</div>
-  </div>
-  <div class="note">
-    <div>計算式：最終結果 ＝ 元の数値 × (1 ＋ アップ率 ÷ 100)</div>
-    <div id="example">例：100 × (1 + 10 ÷ 100) = 110</div>
-  </div>
+<section class="panel result" aria-live="polite">
+<p class="result-label">値上げ後の金額</p>
+<p class="amount" id="final">1,100</p>
+<div class="result-grid">
+<div class="result-item"><div class="small-label">値上げ額</div><div class="small-value" id="increase">100</div></div>
+<div class="result-item"><div class="small-label">値上げ前の金額</div><div class="small-value" id="before">1,000</div></div>
+</div>
+<p class="formula" id="formula">計算式：1,000 × (1 + 10 ÷ 100) = 1,100</p>
+<div class="actions">
+<button class="secondary" id="copy" type="button">結果をコピー</button>
+</div>
+<p class="note" id="message"></p>
 </section>
-<footer>入力内容は保存・送信されません。インターネット接続なしでも、インストール後は利用できます。</footer>
 </main>
 <script>
-(() => {
-  const $ = id => document.getElementById(id);
-  const base = $('base'), rate = $('rate'), digits = $('digits');
-  let mode = 'round';
-  const fmt = (n, d) => Number.isFinite(n) ? n.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:true}) : '—';
-  function calculate(){
-    const b = Number(base.value), r = Number(rate.value), d = Number(digits.value);
-    if(base.value.trim()==='' || rate.value.trim()==='' || !Number.isFinite(b) || !Number.isFinite(r)){
-      $('raw').textContent='—'; $('final').textContent='—'; $('rawFormula').textContent='数値を入力してください'; $('example').textContent=''; return;
-    }
-    const raw = b * (1 + r / 100);
-    const factor = 10 ** d;
-    const adjusted = mode==='ceil' ? Math.ceil((raw - Number.EPSILON) * factor)/factor :
-                     mode==='floor' ? Math.floor((raw + Number.EPSILON) * factor)/factor :
-                     Math.round((raw + Number.EPSILON) * factor)/factor;
-    $('raw').textContent = fmt(raw, Math.min(d+2, 8));
-    $('final').textContent = fmt(adjusted, d);
-    $('rawFormula').textContent = `${fmt(b, Math.min(d,4))} × (1 + ${fmt(r, Math.min(d,4))} ÷ 100)`;
-    const label = mode==='round'?'四捨五入':mode==='ceil'?'切り上げ':'切り捨て';
-    $('roundLabel').textContent = `${label}・小数点以下 ${d} 桁で表示`;
-    $('example').textContent = `例：${fmt(b, Math.min(d,4))} × (1 + ${fmt(r, Math.min(d,4))} ÷ 100) = ${fmt(raw, Math.min(d+2,8))}`;
-  }
-  [base,rate,digits].forEach(el=>el.addEventListener('input',calculate));
-  document.querySelectorAll('#rounding button').forEach(btn=>btn.addEventListener('click',()=>{
-    mode=btn.dataset.mode;
-    document.querySelectorAll('#rounding button').forEach(b=>b.classList.toggle('active',b===btn));
-    calculate();
-  }));
-  $('reset').addEventListener('click',()=>{
-    base.value=''; rate.value=''; digits.value='0'; mode='round';
-    document.querySelectorAll('#rounding button').forEach(b=>b.classList.toggle('active',b.dataset.mode==='round'));
-    calculate(); base.focus();
-  });
-  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
-  }
-  calculate();
-})();
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('ja-JP',{minimumFractionDigits:0,maximumFractionDigits:8});
+function calculate(){
+ const base=Number($('base').value), rate=Number($('rate').value), digits=Number($('digits').value);
+ if($('base').value===''||$('rate').value===''||!Number.isFinite(base)||!Number.isFinite(rate)||base<0){$('message').textContent='金額と値上げ率を正しく入力してください。';return}
+ const factor=10**digits, raw=base*(1+rate/100);
+ let rounded=raw;
+ if($('rounding').value==='ceil') rounded=Math.ceil((raw+Number.EPSILON)*factor)/factor;
+ else if($('rounding').value==='floor') rounded=Math.floor((raw+Number.EPSILON)*factor)/factor;
+ else rounded=Math.round((raw+Number.EPSILON)*factor)/factor;
+ const increase=rounded-base;
+ $('final').textContent=fmt(rounded);
+ $('increase').textContent=fmt(increase);
+ $('before').textContent=fmt(base);
+ $('formula').textContent=`計算式：${fmt(base)} × (1 + ${fmt(rate)} ÷ 100) = ${fmt(rounded)}`;
+ $('message').textContent='';
+}
+$('calculate').addEventListener('click',calculate);
+['base','rate','digits','rounding'].forEach(id=>$(id).addEventListener('input',calculate));
+$('reset').addEventListener('click',()=>{$('base').value='';$('rate').value='';$('digits').value='0';$('rounding').value='round';$('final').textContent='—';$('increase').textContent='—';$('before').textContent='—';$('formula').textContent='金額と値上げ率を入力してください。';$('message').textContent=''});
+$('copy').addEventListener('click',async()=>{const text=`値上げ前：${$('before').textContent}\n値上げ額：${$('increase').textContent}\n値上げ後：${$('final').textContent}\n${$('formula').textContent}`;try{await navigator.clipboard.writeText(text);$('message').textContent='計算結果をコピーしました。'}catch(e){$('message').textContent='コピーできませんでした。結果を長押ししてコピーしてください。'}});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+calculate();
 </script>
 </body>
 </html>
