@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#006b55">
+<meta name="description" content="元の数値とアップ率から値上げ後の金額を計算するアプリ">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>値上げ計算</title>
+<style>
+:root{color-scheme:light;--green:#006b55;--border:#dedede;--muted:#777;--bg:#fff;--soft:#f7f8f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#111;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;min-height:100dvh;align-content:start}
+.panel{border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 2px 5px #00000012}
+.field{margin-bottom:22px}
+label,.section-title{display:block;font-weight:700;margin-bottom:10px;font-size:17px}
+input,select{width:100%;border:1px solid var(--border);border-radius:18px;padding:18px 16px;font:inherit;font-size:22px;background:#fff;color:#111}
+input{text-align:right}
+.suffix{position:relative}.suffix input{padding-right:52px}.suffix span{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--muted);pointer-events:none}
+.options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button{font:inherit;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:18px;padding:15px 8px;font-weight:650;color:#111}
+button.active,button.primary{background:var(--green);border-color:var(--green);color:white}
+.reset{width:100%;margin-top:10px;color:#666}
+.resultbox{border:1px solid var(--border);border-radius:24px;padding:24px;background:#fafafa;margin-bottom:16px}
+.resultbox h2{font-size:18px;margin:0 0 22px}.result{font-size:42px;font-weight:800;text-align:right;overflow-wrap:anywhere}.formula{text-align:right;color:var(--muted);margin-top:10px}
+.final{background:var(--green);color:white;border-radius:24px;padding:24px;margin-bottom:16px}.final h2{font-size:18px;margin:0 0 22px}.final .result{font-size:56px}.final .formula{color:#d6f3e9}
+.note{border:1px dashed var(--border);border-radius:24px;padding:20px;color:var(--muted);line-height:1.8}
+footer{grid-column:1/-1;color:var(--muted);font-size:13px;text-align:center;padding:4px}
+@media(max-width:700px){main{grid-template-columns:1fr;padding:14px;gap:14px}.panel{padding:18px}.result{font-size:36px}.final .result{font-size:48px}.resultbox,.final{padding:20px}}
+</style>
+</head>
+<body>
+<main>
+<section class="panel" aria-label="入力">
+  <div class="field">
+    <label for="base">① 元の数値</label>
+    <input id="base" type="number" inputmode="decimal" value="100" step="any">
+  </div>
+  <div class="field">
+    <label for="rate">② アップ率</label>
+    <div class="suffix"><input id="rate" type="number" inputmode="decimal" value="10" step="any"><span>%</span></div>
+  </div>
+  <div class="field">
+    <span class="section-title">③ 端数処理</span>
+    <div class="options" id="rounding">
+      <button type="button" data-mode="round" class="active">四捨五入</button>
+      <button type="button" data-mode="ceil">切り上げ</button>
+      <button type="button" data-mode="floor">切り捨て</button>
+    </div>
+  </div>
+  <div class="field">
+    <label for="digits">④ 小数点以下の表示桁数</label>
+    <select id="digits">
+      <option value="0">0位（整数）</option>
+      <option value="1">1位（小数第1位まで）</option>
+      <option value="2">2位（小数第2位まで）</option>
+      <option value="3">3位（小数第3位まで）</option>
+      <option value="4">4位（小数第4位まで）</option>
+    </select>
+  </div>
+  <button type="button" id="reset" class="reset">↶　リセット</button>
+</section>
+<section aria-label="計算結果">
+  <div class="resultbox">
+    <h2>⑤ 結果（端数処理前）</h2>
+    <div class="result" id="raw">110</div>
+    <div class="formula" id="rawFormula">100 × (1 + 10 ÷ 100)</div>
+  </div>
+  <div class="final">
+    <h2>⑥ 最終結果</h2>
+    <div class="result" id="final">110</div>
+    <div class="formula" id="roundLabel">四捨五入・整数で表示</div>
+  </div>
+  <div class="note">
+    <div>計算式：最終結果 ＝ 元の数値 × (1 ＋ アップ率 ÷ 100)</div>
+    <div id="example">例：100 × (1 + 10 ÷ 100) = 110</div>
+  </div>
+</section>
+<footer>入力内容は保存・送信されません。インターネット接続なしでも、インストール後は利用できます。</footer>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const base = $('base'), rate = $('rate'), digits = $('digits');
+  let mode = 'round';
+  const fmt = (n, d) => Number.isFinite(n) ? n.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:true}) : '—';
+  function calculate(){
+    const b = Number(base.value), r = Number(rate.value), d = Number(digits.value);
+    if(base.value.trim()==='' || rate.value.trim()==='' || !Number.isFinite(b) || !Number.isFinite(r)){
+      $('raw').textContent='—'; $('final').textContent='—'; $('rawFormula').textContent='数値を入力してください'; $('example').textContent=''; return;
+    }
+    const raw = b * (1 + r / 100);
+    const factor = 10 ** d;
+    const adjusted = mode==='ceil' ? Math.ceil((raw - Number.EPSILON) * factor)/factor :
+                     mode==='floor' ? Math.floor((raw + Number.EPSILON) * factor)/factor :
+                     Math.round((raw + Number.EPSILON) * factor)/factor;
+    $('raw').textContent = fmt(raw, Math.min(d+2, 8));
+    $('final').textContent = fmt(adjusted, d);
+    $('rawFormula').textContent = `${fmt(b, Math.min(d,4))} × (1 + ${fmt(r, Math.min(d,4))} ÷ 100)`;
+    const label = mode==='round'?'四捨五入':mode==='ceil'?'切り上げ':'切り捨て';
+    $('roundLabel').textContent = `${label}・小数点以下 ${d} 桁で表示`;
+    $('example').textContent = `例：${fmt(b, Math.min(d,4))} × (1 + ${fmt(r, Math.min(d,4))} ÷ 100) = ${fmt(raw, Math.min(d+2,8))}`;
+  }
+  [base,rate,digits].forEach(el=>el.addEventListener('input',calculate));
+  document.querySelectorAll('#rounding button').forEach(btn=>btn.addEventListener('click',()=>{
+    mode=btn.dataset.mode;
+    document.querySelectorAll('#rounding button').forEach(b=>b.classList.toggle('active',b===btn));
+    calculate();
+  }));
+  $('reset').addEventListener('click',()=>{
+    base.value=''; rate.value=''; digits.value='0'; mode='round';
+    document.querySelectorAll('#rounding button').forEach(b=>b.classList.toggle('active',b.dataset.mode==='round'));
+    calculate(); base.focus();
+  });
+  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+  }
+  calculate();
+})();
+</script>
+</body>
+</html>
